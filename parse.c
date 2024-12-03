@@ -2,6 +2,7 @@
 #include "string.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 void parse_args(char *line, char **arg_ary) {
     char *front = line;
@@ -14,4 +15,15 @@ void parse_args(char *line, char **arg_ary) {
         arg_ary[c] = saved_token;
         c++;
     }
+}
+
+void handle_line_input(char * buffer) {
+    long arg_max = sysconf(_SC_ARG_MAX);
+    buffer[strcspn(buffer, "\r\n")] = 0;
+    if (strcmp(buffer, "exit") == 0) {
+        exit(0);
+    }
+    char ** cmdargv = calloc(arg_max, sizeof(char *));
+    parse_args(buffer, cmdargv);
+    execvp(cmdargv[0], cmdargv);
 }
