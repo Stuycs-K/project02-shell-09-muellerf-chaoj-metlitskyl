@@ -7,9 +7,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-void handleChild(char **cmdargv) {
-    execvp(cmdargv[0], cmdargv);
-}
+void handleChild(char **cmdargv) { execvp(cmdargv[0], cmdargv); }
 
 void handlePossibleForkFail(pid_t p) {
     if (p < 0) {
@@ -49,7 +47,9 @@ void handle_line_input(char *buffer) {
         handleChild(cmdargv);
     } else {
         int status;
-        waitpid(child_one, &status, 0); // if ran with htop and CONTROL+C(siqinterrupt) it breaks shell
+        waitpid(
+            child_one, &status,
+            0); // if ran with htop and CONTROL+C(siqinterrupt) it breaks shell
         printf("Child %d finished!\n", child_one);
         // parent
     }
