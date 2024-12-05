@@ -1,5 +1,5 @@
 outname = shell
-c_files = parse.c utils.c
+c_files = parse.c utils.c exec.c
 
 o_files = $(c_files:.c=.o)
 h_files = $(c_files:.c=.h)

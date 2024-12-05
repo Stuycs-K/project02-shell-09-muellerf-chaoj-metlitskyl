@@ -1,22 +1,12 @@
 #include "parse.h"
 #include "string.h"
-#include <errno.h>
+#include "exec.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
-void handleChild(char **cmdargv) { execvp(cmdargv[0], cmdargv); }
-
-void handlePossibleForkFail(pid_t p) {
-    if (p < 0) {
-        char err[256];
-        sprintf(err, "Error: %s\n", strerror(errno));
-        perror(err); // output to stderr instead of stdout
-        exit(1);
-    }
-}
 
 void parse_args(char *line, char **arg_ary) {
     char *front = line;
