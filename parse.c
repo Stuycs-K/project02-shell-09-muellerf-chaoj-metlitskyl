@@ -1,5 +1,6 @@
 #include "parse.h"
 #include "string.h"
+#include "utils.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,6 +50,9 @@ void handle_line_input(char *buffer) {
 
     if (strcmp(cmdargv[0], "cd") == 0) {
         char *cd_path = cmdargv[1];
+        if (cmdargv[1] == NULL) { // no argument was passed to cd
+            cd_path = get_home_dir();
+        }
         int cd_return_value = chdir(cd_path);
         if (cd_return_value != 0) {
             perror(strerror(errno));
