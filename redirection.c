@@ -8,7 +8,7 @@
 
 void stdout_redirect(char * output) {
     int output_file = open(output, O_WRONLY | O_TRUNC, 0644);
-    int backup = dup(STDOUT_FILENO);
+    // int backup = dup(STDOUT_FILENO);
     dup2(output_file, STDOUT_FILENO);
     printf("stdout redirected.");
     close(output_file);
@@ -18,7 +18,7 @@ void stdout_redirect(char * output) {
 
 void stdout_redirect_append(char * input, char * output) {
     int output_file = open(output, O_WRONLY | O_APPEND, 0644);
-    int backup = dup(STDOUT_FILENO);
+    // int backup = dup(STDOUT_FILENO);
     dup2(output_file, STDOUT_FILENO);
     printf("stdout redirected.");
     close(output_file);
@@ -27,8 +27,9 @@ void stdout_redirect_append(char * input, char * output) {
 }
 
 void stdin_redirect(char * input) {
-    int backup = dup(STDIN_FILENO);
-    dup2(STDIN_FILENO, input);
+    int input_file = open(input, O_RDONLY);
+    // int backup = dup(STDIN_FILENO);
+    dup2(STDIN_FILENO, input_file);
     printf("File redirected into stdin.");
     fflush(stdin);
     // dup2(stdin, backup);
