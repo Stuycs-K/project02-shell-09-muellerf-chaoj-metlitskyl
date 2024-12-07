@@ -7,7 +7,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-void handleChild(char **cmdargv) { execvp(cmdargv[0], cmdargv); }
+void handleChild(char **cmdargv) {
+    execvp(cmdargv[0], cmdargv);
+    printf("%s\n", strerror(errno));
+    exit(errno); // this is only executed if execvp fails (so child does not keep on living)
+}
 
 void handlePossibleForkFail(pid_t p) {
     if (p < 0) {
@@ -39,6 +43,9 @@ void handle_line_input(char *buffer) {
     }
     char **cmdargv = calloc(arg_max, sizeof(char *));
     parse_args(buffer, cmdargv);
+    if (strcmp(cmdargv[0], "") == 0 || cmdargv[0][0] == 27) {
+        return; // don't do anything if blank or escape char (execing nothing just forks unncessarily)
+    }
 
     pid_t child_one;
     child_one = fork();
