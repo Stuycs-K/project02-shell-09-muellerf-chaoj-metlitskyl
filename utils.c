@@ -6,7 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
-int prefix(const char *pre, const char *str) {
+int prefix_cmp(const char *pre, const char *str) {
     return strncmp(pre, str, strlen(pre)) == 0;
 }
 
@@ -26,7 +26,7 @@ void print_prompt() {
     char *path_target = calloc(path_target_len, sizeof(char));
     strcat(path_target, home_prefix);
     strcat(path_target, username);
-    if (prefix(path_target, cwd)) {
+    if (prefix_cmp(path_target, cwd)) {
         cwd_formatted[path_target_len - 2] = '~';
         cwd_formatted = cwd + path_target_len - 2; // subtract 2 instead of 1 to account for '~'
     }
