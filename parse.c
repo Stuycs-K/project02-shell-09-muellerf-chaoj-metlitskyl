@@ -1,5 +1,6 @@
 #include "parse.h"
 #include "string.h"
+#include "utils.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +10,7 @@
 
 void handleChild(char **cmdargv) {
     execvp(cmdargv[0], cmdargv);
-    printf("%s\n", strerror(errno));
+    perror(strerror(errno));
     exit(errno); // this is only executed if execvp fails (so child does not keep on living)
 }
 
@@ -45,6 +46,18 @@ void handle_line_input(char *buffer) {
     parse_args(buffer, cmdargv);
     if (strcmp(cmdargv[0], "") == 0 || cmdargv[0][0] == 27) {
         return; // don't do anything if blank or escape char (execing nothing just forks unncessarily)
+    }
+
+    if (strcmp(cmdargv[0], "cd") == 0) {
+        char *cd_path = cmdargv[1];
+        if (cmdargv[1] == NULL) { // no argument was passed to cd
+            cd_path = get_home_dir();
+        }
+        int cd_return_value = chdir(cd_path);
+        if (cd_return_value != 0) {
+            perror(strerror(errno));
+        }
+        return;
     }
 
     pid_t child_one;
