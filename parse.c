@@ -39,6 +39,10 @@ void handle_line_input(char *buffer) {
     }
     char **cmdargv = calloc(arg_max, sizeof(char *));
     parse_args(buffer, cmdargv);
+    if (strcmp(cmdargv[0], "") == 0) {
+        return; // don't do anything (execing nothing just forks unncessarily)
+        // TODO: This check fails if we have characters like up arrow key or somehting
+    }
 
     pid_t child_one;
     child_one = fork();
