@@ -10,7 +10,11 @@
 
 void handleChild(char **cmdargv) {
     execvp(cmdargv[0], cmdargv);
-    perror(strerror(errno));
+    if (errno == 2) { // command not found
+        printf("%s: command not found...\n", cmdargv[0]);
+    } else {
+        perror(strerror(errno));
+    }
     exit(errno); // this is only executed if execvp fails (so child does not keep on living)
 }
 
