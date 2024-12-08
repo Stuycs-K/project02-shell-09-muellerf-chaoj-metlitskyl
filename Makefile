@@ -1,5 +1,9 @@
 outname = shell
+<<<<<<< HEAD
 c_files = parse.c utils.c redirection.c
+=======
+c_files = parse.c utils.c exec.c
+>>>>>>> 89618252669bcfab8ecd2b22c02d16bee40743e6
 
 o_files = $(c_files:.c=.o)
 h_files = $(c_files:.c=.h)
