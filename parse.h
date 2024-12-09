@@ -1,5 +1,5 @@
 #ifndef PARSE_H
 #define PARSE_H
-void parse_args(char *line, char **arg_ary);
+int split_on_string(char *line, char *split, char **command_ary);
 void handle_line_input(char * buffer);
 #endif
