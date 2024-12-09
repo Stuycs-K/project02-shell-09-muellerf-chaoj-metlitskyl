@@ -28,25 +28,79 @@ void handlePossibleForkFail(pid_t p) {
     }
 }
 
-void parse_args(char *line, char **arg_ary) {
+int split_on_string(char *line, char *split, char **command_ary) {
     char *front = line;
     char *token;
     int c = 0;
 
-    while ((token = strsep(&front, " ")) != NULL) {
+    while ((token = strsep(&front, split)) != NULL) {
         char *saved_token = calloc(strlen(token), sizeof(char));
         strcpy(saved_token, token);
-        arg_ary[c] = saved_token;
+        command_ary[c] = saved_token;
         c++;
     }
+    return c;
 }
 
 void handle_line_input(char *buffer) {
+    // i bet no kid thought of this temp file name (yes i know this can just be dynamic but we are lazy :) )
+    char *TEMP_FILE = "/tmp/pipevjZQ3SZpv2UygTLp4RWE.txt"; // string LITERAL can't be modified
+
+    int backup_stdout = dup(STDOUT_FILENO);
+    int backup_stdin = dup(STDIN_FILENO);
+
     long arg_max = sysconf(_SC_ARG_MAX);
     buffer[strcspn(buffer, "\r\n")] = 0;
     if (strcmp(buffer, "exit") == 0) {
         exit(0);
     }
+
+    if (buffer[0] == ' '){ // one char left strip
+        buffer++; // shift left
+    }
+    if (buffer[strlen(buffer) - 1] == ' '){ // one char right strip
+        buffer[strlen(buffer) - 1] = '\0'; // shift right
+    }
+
+    // split on all instances of semicolons FIRST
+    char **semi_colon_lines_argv = calloc(4096, sizeof(char *));
+    int semi_colon_commands_len = split_on_string(buffer, ";", semi_colon_lines_argv); // also loads into semi_colon_lines_argv
+
+    if (semi_colon_commands_len > 1){ // if more than one command
+        for (int i = 0; i < semi_colon_commands_len; i++){
+            handle_line_input(semi_colon_lines_argv[i]);
+
+            // revert file table
+            dup2(backup_stdout, STDOUT_FILENO);
+            dup2(backup_stdin, STDIN_FILENO);
+        }
+        
+        return; // handled all sub semi colons already 
+    }
+    
+    // split on all instances of pipes
+    char **lineargv = calloc(1024, sizeof(char *));
+    int pipe_commands_len = split_on_string(buffer, "|", lineargv);
+
+    if (pipe_commands_len > 1){ // if more than one command
+        for (int i = 0; i < pipe_commands_len; i++){
+            if (i == 0){ // if first command
+                stdout_redirect(TEMP_FILE);   // overwrites and truncates temp file
+            } else if (i == 1){
+                stdin_redirect(TEMP_FILE);   
+            }
+
+            handle_line_input(lineargv[i]);
+
+            // revert file table
+            dup2(backup_stdout, STDOUT_FILENO);
+            dup2(backup_stdin, STDIN_FILENO);
+        }
+        
+        return; // handled all sub pipes already 
+    }
+
+
     // find all stuff after '>'
     int MODE = 0; // 0: do nothing mode, 1: write, 2: append, 3: input
     char *str_out;
@@ -62,9 +116,6 @@ void handle_line_input(char *buffer) {
         }
         // if str_out specified, end buffer early;
         buffer[strlen(buffer) - strlen(str_out) - MODE - 2] = '\0'; // MODE is a proxy for chars removed too :)
-        // printf("|%s|\n",buffer);
-        // printf("Stuff after >:%s\n", str_out);
-        // printf("Mode:%d\n", MODE);
     }
     char *str_in;
     str_in = strchr(buffer, '<');
@@ -74,13 +125,8 @@ void handle_line_input(char *buffer) {
         MODE = 3;
         // if str_in specified, end buffer early;
         buffer[strlen(buffer) - strlen(str_in) - 1 - 2] = '\0';
-        // printf("|%s|\n", buffer);
-        // printf("Stuff after <:%s\n", str_in);
-        // printf("(input) Mode:%d\n", MODE);
     }
     
-    int backup_stdout = dup(STDOUT_FILENO);
-    int backup_stdin = dup(STDIN_FILENO);
     if (MODE == 1){
         stdout_redirect(str_out);
     } else if (MODE == 2){
@@ -89,10 +135,9 @@ void handle_line_input(char *buffer) {
         stdin_redirect(str_in); // DOES NOT HANDLE BOTH < and > used at once
     }
 
-    
 
     char **cmdargv = calloc(arg_max, sizeof(char *));
-    parse_args(buffer, cmdargv);
+    split_on_string(buffer, " ", cmdargv); // this returns number of cmds (ignored) and ALSO loads in cmdargv
     if (strcmp(cmdargv[0], "") == 0 || cmdargv[0][0] == 27) {
         return; // don't do anything if blank or escape char (execing nothing just forks unncessarily)
     }
@@ -118,7 +163,7 @@ void handle_line_input(char *buffer) {
         int status;
         waitpid(child_one, &status, 0);
         // revert file table
-        dup2(backup_stdout, STDOUT_FILENO );
-        dup2(backup_stdin,STDIN_FILENO );
+        dup2(backup_stdout, STDOUT_FILENO);
+        dup2(backup_stdin, STDIN_FILENO);
     }
 }
