@@ -9,7 +9,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-void handleChild(char **cmdargv) {
+void handleChild(char **cmdargv) { // Takes in command arguments and executes.
     execvp(cmdargv[0], cmdargv);
     if (errno == 2) { // command not found
         printf("%s: command not found...\n", cmdargv[0]);
@@ -19,7 +19,7 @@ void handleChild(char **cmdargv) {
     exit(errno); // this is only executed if execvp fails (so child does not keep on living)
 }
 
-void handlePossibleForkFail(pid_t p) {
+void handlePossibleForkFail(pid_t p) { // Takes in pid and checks if == -1. If so, fork failed. Prints error message and exits.
     if (p < 0) {
         char err[256];
         sprintf(err, "Error: %s\n", strerror(errno));
@@ -28,7 +28,7 @@ void handlePossibleForkFail(pid_t p) {
     }
 }
 
-int split_on_string(char *line, char *split, char **command_ary) {
+int split_on_string(char *line, char *split, char **command_ary) { // Takes in line, char separator, and empty array of commands. Splits line on separator into individual commands and loads them command_ary.
     char *front = line;
     char *token;
     int c = 0;
@@ -42,7 +42,7 @@ int split_on_string(char *line, char *split, char **command_ary) {
     return c;
 }
 
-void handle_line_input(char *buffer) {
+void handle_line_input(char *buffer) { // Executes main bulk of shell program. Takes in buffer, checks for exit, else splits buffer on semicolons and redirections. Executes commands in child processes.
     // i bet no kid thought of this temp file name (yes i know this can just be dynamic but we are lazy :) )
     char *TEMP_FILE = "/tmp/pipevjZQ3SZpv2UygTLp4RWE.txt"; // string LITERAL can't be modified
 

@@ -8,11 +8,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int prefix_cmp(const char *pre, const char *str) {
+int prefix_cmp(const char *pre, const char *str) { // Takes in two strings. Returns 1 if first string is prefix of second, 0 otherwise.
     return strncmp(pre, str, strlen(pre)) == 0;
 }
 
-void print_prompt() {
+void print_prompt() { // Takes in no arguments. Prints prompt (with username, hostname, and ~ for home dir) to stdout.
     char username[LOGIN_NAME_MAX + 1];
     getlogin_r(username, sizeof(username)); // check the return value!
 
@@ -37,7 +37,7 @@ void print_prompt() {
     free(cwd);
 }
 
-char *get_home_dir() {
+char *get_home_dir() { // Takes in no arguments. Returns home directory of current user.
     struct passwd *pw = getpwuid(getuid());
     char *homedir = pw->pw_dir;
     // pointer does NOT need to be freed here (free doesn't work on it even)
