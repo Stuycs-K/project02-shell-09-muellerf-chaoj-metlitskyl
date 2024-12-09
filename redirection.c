@@ -22,9 +22,6 @@ void stdout_redirect_append(char * output) {
 
 void stdin_redirect(char * input) {
     int input_file = open(input, O_RDONLY);
-    // int backup = dup(STDIN_FILENO);
-    dup2(STDIN_FILENO, input_file);
-    printf("File redirected into stdin.");
+    dup2(input_file, STDIN_FILENO);
     fflush(stdin);
-    // dup2(stdin, backup);
 }

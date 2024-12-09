@@ -42,31 +42,45 @@ void handle_line_input(char *buffer) {
         exit(0);
     }
     // find all stuff after '>'
-    int MODE = 0; // 0: do nothing mode, 1: write, 2: append
-    char *str;
-    str = strchr(buffer, '>');
-    if (str != NULL) {
-        str++; /* step over the greater than */
-        if (str[0] == '>'){ // second '>' means append mode
+    int MODE = 0; // 0: do nothing mode, 1: write, 2: append, 3: input
+    char *str_out;
+    str_out = strchr(buffer, '>');
+    if (str_out != NULL) {
+        str_out++; /* step over the greater than */
+        if (str_out[0] == '>'){ // second '>' means append mode
             MODE = 2;
-            str += 2; // step over the '>' and space
+            str_out += 2; // step over the '>' and space
         } else {
             MODE = 1;
-            str += 1; // step over the space
+            str_out += 1; // step over the space
         }
-        // if str specified, end buffer early;
-        buffer[strlen(buffer) - strlen(str) - MODE - 2] = '\0';
+        // if str_out specified, end buffer early;
+        buffer[strlen(buffer) - strlen(str_out) - MODE - 2] = '\0'; // MODE is a proxy for chars removed too :)
         printf("|%s|\n",buffer);
-        printf("Stuff after >:%s\n", str);
+        printf("Stuff after >:%s\n", str_out);
         printf("Mode:%d\n", MODE);
+    }
+    char *str_in;
+    str_in = strchr(buffer, '<');
+    if (str_in != NULL) {
+        str_in++; /* step over the less than */
+        str_in++; /* step over the space */
+        MODE = 3;
+        // if str_in specified, end buffer early;
+        buffer[strlen(buffer) - strlen(str_in) - 1 - 2] = '\0';
+        printf("|%s|\n", buffer);
+        printf("Stuff after <:%s\n", str_in);
+        printf("(input) Mode:%d\n", MODE);
     }
     
     int backup_stdout = dup(STDOUT_FILENO);
     int backup_stdin = dup(STDIN_FILENO);
     if (MODE == 1){
-        stdout_redirect(str);
+        stdout_redirect(str_out);
     } else if (MODE == 2){
-        stdout_redirect_append(str);
+        stdout_redirect_append(str_out);
+    } else if (MODE == 3){
+        stdin_redirect(str_in); // DOES NOT HANDLE BOTH < and > used at once
     }
 
     
