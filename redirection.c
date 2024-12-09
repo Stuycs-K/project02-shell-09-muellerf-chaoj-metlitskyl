@@ -7,23 +7,17 @@
 #include <fcntl.h>
 
 void stdout_redirect(char * output) {
-    int output_file = open(output, O_WRONLY | O_TRUNC, 0644);
-    // int backup = dup(STDOUT_FILENO);
+    int output_file = open(output, O_CREAT | O_WRONLY | O_TRUNC, 0644);
     dup2(output_file, STDOUT_FILENO);
-    printf("stdout redirected.");
     close(output_file);
     fflush(stdout);
-    // dup2(stdout, backup);
 }
 
-void stdout_redirect_append(char * input, char * output) {
-    int output_file = open(output, O_WRONLY | O_APPEND, 0644);
-    // int backup = dup(STDOUT_FILENO);
+void stdout_redirect_append(char * output) {
+    int output_file = open(output, O_CREAT | O_WRONLY | O_APPEND, 0644);
     dup2(output_file, STDOUT_FILENO);
-    printf("stdout redirected.");
     close(output_file);
     fflush(stdout);
-    // dup2(stdout, backup);
 }
 
 void stdin_redirect(char * input) {
