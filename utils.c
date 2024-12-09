@@ -1,12 +1,14 @@
 #include "utils.h"
 #include <bits/local_lim.h>
 #include <linux/limits.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <unistd.h>
 
-int prefix(const char *pre, const char *str) {
+int prefix_cmp(const char *pre, const char *str) {
     return strncmp(pre, str, strlen(pre)) == 0;
 }
 
@@ -21,14 +23,10 @@ void print_prompt() {
     char *cwd_formatted = cwd;
     getcwd(cwd, PATH_MAX); // check the return value!
                            // replace "/home/user" from cwd
-    char home_prefix[] = "/home/";
-    size_t path_target_len = strlen(home_prefix) + strlen(username) + 1;
-    char *path_target = calloc(path_target_len, sizeof(char));
-    strcat(path_target, home_prefix);
-    strcat(path_target, username);
-    if (prefix(path_target, cwd)) {
-        cwd_formatted[path_target_len - 2] = '~';
-        cwd_formatted = cwd + path_target_len - 2; // subtract 2 instead of 1 to account for '~'
+    char *home_dir = get_home_dir();
+    if (prefix_cmp(home_dir, cwd)) {
+        cwd_formatted[strlen(home_dir) - 1] = '~';
+        cwd_formatted = cwd + strlen(home_dir) - 1; // subtract 2 instead of 1 to account for '~'
     }
 
     char prompt[LOGIN_NAME_MAX + HOST_NAME_MAX + PATH_MAX + 512] = "";
@@ -37,4 +35,12 @@ void print_prompt() {
     printf(prompt);
     fflush(stdout);
     free(cwd);
+}
+
+char *get_home_dir() {
+    struct passwd *pw = getpwuid(getuid());
+    char *homedir = pw->pw_dir;
+    // pointer does NOT need to be freed here (free doesn't work on it even)
+    // so no need to strcpy if the memory is something special here
+    return homedir;
 }
