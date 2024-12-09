@@ -43,8 +43,10 @@ int split_on_string(char *line, char *split, char **command_ary) {
 }
 
 void handle_line_input(char *buffer) {
-    // i bet no kid thought of this temp file name (yes i know this can just be dynamic but we are lazy :) )
-    char *TEMP_FILE = "/tmp/pipevjZQ3SZpv2UygTLp4RWE.txt"; // string LITERAL can't be modified
+    // // i bet no kid thought of this temp file name (yes i know this can just be dynamic but we are lazy :) )
+    // char *TEMP_FILE = "/tmp/pipevjZQ3SZpv2UygTLp4RWE.txt"; // string LITERAL can't be modified
+
+    // int temp_file = mkstemp(); // create temp file
 
     int backup_stdout = dup(STDOUT_FILENO);
     int backup_stdin = dup(STDIN_FILENO);
@@ -83,18 +85,15 @@ void handle_line_input(char *buffer) {
     int pipe_commands_len = split_on_string(buffer, "|", lineargv);
 
     if (pipe_commands_len > 1){ // if more than one command
+        int input_file_descriptor = STDIN_FILENO;
         for (int i = 0; i < pipe_commands_len; i++){
-            if (i == 0){ // if first command
-                stdout_redirect(TEMP_FILE);   // overwrites and truncates temp file
-            } else if (i == 1){
-                stdin_redirect(TEMP_FILE);   
-            }
-
+            stdin_redirect_random(input_file_descriptor);
             handle_line_input(lineargv[i]);
+            input_file_descriptor = stdout_redirect_random();   // overwrites and truncates temp file   
 
-            // revert file table
-            dup2(backup_stdout, STDOUT_FILENO);
-            dup2(backup_stdin, STDIN_FILENO);
+            // // revert file table
+            // dup2(backup_stdout, STDOUT_FILENO);
+            // dup2(backup_stdin, STDIN_FILENO);
         }
         
         return; // handled all sub pipes already 

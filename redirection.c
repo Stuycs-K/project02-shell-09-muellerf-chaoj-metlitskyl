@@ -6,6 +6,19 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+int stdout_redirect_random() {
+    char template[] = "pipeXXXXXX";
+    int output_file = mkstemp(template);
+    dup2(output_file, STDOUT_FILENO);
+    close(output_file);
+    fflush(stdout);
+    return output_file;
+}
+void stdin_redirect_random(int input) {
+    dup2(input, STDIN_FILENO);
+    fflush(stdin);
+}
+
 void stdout_redirect(char * output) {
     int output_file = open(output, O_CREAT | O_WRONLY | O_TRUNC, 0644);
     dup2(output_file, STDOUT_FILENO);
