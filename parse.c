@@ -33,9 +33,6 @@ void parse_args(char *line, char **arg_ary) {
 }
 
 void handle_line_input(char *buffer) {
-    // reset stdout and stdin first in here
-
-
     long arg_max = sysconf(_SC_ARG_MAX);
     buffer[strcspn(buffer, "\r\n")] = 0;
     if (strcmp(buffer, "exit") == 0) {
@@ -56,9 +53,9 @@ void handle_line_input(char *buffer) {
         }
         // if str_out specified, end buffer early;
         buffer[strlen(buffer) - strlen(str_out) - MODE - 2] = '\0'; // MODE is a proxy for chars removed too :)
-        printf("|%s|\n",buffer);
-        printf("Stuff after >:%s\n", str_out);
-        printf("Mode:%d\n", MODE);
+        // printf("|%s|\n",buffer);
+        // printf("Stuff after >:%s\n", str_out);
+        // printf("Mode:%d\n", MODE);
     }
     char *str_in;
     str_in = strchr(buffer, '<');
@@ -68,9 +65,9 @@ void handle_line_input(char *buffer) {
         MODE = 3;
         // if str_in specified, end buffer early;
         buffer[strlen(buffer) - strlen(str_in) - 1 - 2] = '\0';
-        printf("|%s|\n", buffer);
-        printf("Stuff after <:%s\n", str_in);
-        printf("(input) Mode:%d\n", MODE);
+        // printf("|%s|\n", buffer);
+        // printf("Stuff after <:%s\n", str_in);
+        // printf("(input) Mode:%d\n", MODE);
     }
     
     int backup_stdout = dup(STDOUT_FILENO);
