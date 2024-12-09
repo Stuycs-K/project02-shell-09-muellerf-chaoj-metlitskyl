@@ -56,6 +56,9 @@ int parse_commands_of_pipe(char *line, char **command_ary) {
 }
 
 void handle_line_input(char *buffer) {
+    // i bet no kid thought of this temp file name (yes i know this can just be dynamic but we are lazy :) )
+    char *TEMP_FILE = "/tmp/pipevjZQ3SZpv2UygTLp4RWE.txt"; // string LITERAL can't be modified
+
     int backup_stdout = dup(STDOUT_FILENO);
     int backup_stdin = dup(STDIN_FILENO);
 
@@ -80,9 +83,9 @@ void handle_line_input(char *buffer) {
             }
 
             if (i == 0){ // if first command
-                stdout_redirect("/tmp/pipe.txt");   
+                stdout_redirect(TEMP_FILE);   // overwrites and truncates temp file
             } else if (i == 1){
-                stdin_redirect("/tmp/pipe.txt");   
+                stdin_redirect(TEMP_FILE);   
             }
 
             handle_line_input(lineargv[i]);
