@@ -41,12 +41,61 @@ void parse_args(char *line, char **arg_ary) {
     }
 }
 
+int parse_commands_of_pipe(char *line, char **command_ary) {
+    char *front = line;
+    char *token;
+    int c = 0;
+
+    while ((token = strsep(&front, "|")) != NULL) {
+        char *saved_token = calloc(strlen(token), sizeof(char));
+        strcpy(saved_token, token);
+        command_ary[c] = saved_token;
+        c++;
+    }
+    return c;
+}
+
 void handle_line_input(char *buffer) {
+    int backup_stdout = dup(STDOUT_FILENO);
+    int backup_stdin = dup(STDIN_FILENO);
+
     long arg_max = sysconf(_SC_ARG_MAX);
     buffer[strcspn(buffer, "\r\n")] = 0;
     if (strcmp(buffer, "exit") == 0) {
         exit(0);
     }
+
+    // split on all instances of pipes
+    
+    char **lineargv = calloc(1024, sizeof(char *));
+    int commands_len = parse_commands_of_pipe(buffer, lineargv);
+
+    if (commands_len > 1){ // if more than one command
+        for (int i = 0; i < commands_len; i++){
+            if (lineargv[i][0] == ' '){
+                lineargv[i]++; // shift left
+            }
+            if (lineargv[i][strlen(lineargv[i]) - 1] == ' '){
+                lineargv[i][strlen(lineargv[i]) - 1] = '\0'; // shift right
+            }
+
+            if (i == 0){ // if first command
+                stdout_redirect("/tmp/pipe.txt");   
+            } else if (i == 1){
+                stdin_redirect("/tmp/pipe.txt");   
+            }
+
+            handle_line_input(lineargv[i]);
+
+            // revert file table
+            dup2(backup_stdout, STDOUT_FILENO);
+            dup2(backup_stdin, STDIN_FILENO);
+        }
+        
+        return; // handled all sub pipes already 
+    }
+
+
     // find all stuff after '>'
     int MODE = 0; // 0: do nothing mode, 1: write, 2: append, 3: input
     char *str_out;
@@ -79,8 +128,6 @@ void handle_line_input(char *buffer) {
         // printf("(input) Mode:%d\n", MODE);
     }
     
-    int backup_stdout = dup(STDOUT_FILENO);
-    int backup_stdin = dup(STDIN_FILENO);
     if (MODE == 1){
         stdout_redirect(str_out);
     } else if (MODE == 2){
@@ -118,7 +165,7 @@ void handle_line_input(char *buffer) {
         int status;
         waitpid(child_one, &status, 0);
         // revert file table
-        dup2(backup_stdout, STDOUT_FILENO );
-        dup2(backup_stdin,STDIN_FILENO );
+        dup2(backup_stdout, STDOUT_FILENO);
+        dup2(backup_stdin, STDIN_FILENO);
     }
 }
