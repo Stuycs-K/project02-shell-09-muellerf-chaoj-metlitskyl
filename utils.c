@@ -8,11 +8,24 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int prefix_cmp(const char *pre, const char *str) { // Takes in two strings. Returns 1 if first string is prefix of second, 0 otherwise.
+/*
+ * Compares two strings to see if the first is a prefix of the second.
+ * NOTE: Only used in this file.
+ * @param pre: prefix string
+ * @param str: string to check for prefix
+ * @return: int = 1 if prefix exists, 0 otherwise
+*/
+int prefix_cmp(const char *pre, const char *str) { 
     return strncmp(pre, str, strlen(pre)) == 0;
 }
 
-void print_prompt() { // Takes in no arguments. Prints prompt (with username, hostname, and ~ for home dir) to stdout.
+/*
+ * Prints prompt (with username, hostname, and ~ substituted for home dir) to stdout.
+ * NOTE: ~ may not appear in Windows because of different home directory structure from Linux.
+ * @param: void
+ * @return: void
+*/
+void print_prompt() {
     char username[LOGIN_NAME_MAX + 1];
     getlogin_r(username, sizeof(username)); // check the return value!
 
@@ -32,12 +45,18 @@ void print_prompt() { // Takes in no arguments. Prints prompt (with username, ho
     char prompt[LOGIN_NAME_MAX + HOST_NAME_MAX + PATH_MAX + 512] = "";
     sprintf(prompt, "%s@%s %s$ ", username, hostname, cwd_formatted);
 
-    printf(prompt);
+    printf("%s", prompt);
     fflush(stdout);
     free(cwd);
 }
 
-char *get_home_dir() { // Takes in no arguments. Returns home directory of current user.
+/*
+ * Gets home directory of current user.
+ * NOTE: Only used in this file.
+ * @param: void
+ * @return: char * = home directory of current user
+*/
+char *get_home_dir() {
     struct passwd *pw = getpwuid(getuid());
     char *homedir = pw->pw_dir;
     // pointer does NOT need to be freed here (free doesn't work on it even)

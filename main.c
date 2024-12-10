@@ -6,12 +6,25 @@
 #include "parse.h"
 #include "utils.h"
 
-static void handle_interrupt(int signo) { // Used to catch SIGINT (^C) signal, does nothing.
+/* 
+ * Catches SIGINT (^C) signal, does nothing.
+ * NOTE: Is a static function.
+ * @param signo: signal number
+ * @return: void
+*/
+static void handle_interrupt(int signo) {
     if (signo == SIGINT) {
     }
 }
 
-int main(int argc, char **argv) { // Main function. Takes in command line arguments, checks for SIGINT, prints prompt, reads input, and executes commands.
+/*
+ * // Main function. Takes in command line arguments & calls other functions
+ * to check for SIGINT, print prompt, read input, and execute commands.
+ * @param argc: number of command line arguments
+ * @param argv: string array of command line arguments
+ * @return: int = 0
+*/
+int main(int argc, char **argv) { 
     signal(SIGINT, handle_interrupt);
     print_prompt();
     char buffer[256];

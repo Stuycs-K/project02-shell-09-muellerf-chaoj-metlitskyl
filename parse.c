@@ -9,7 +9,14 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-void handleChild(char **cmdargv) { // Takes in command arguments and executes.
+/*
+ * Executes given user command arguments using execvp.
+ * Exits with error message if command not found.
+ * NOTE: Only used in this file.
+ * @param cmdargv: string array of command arguments
+ * @return: void
+*/
+void handleChild(char **cmdargv) {
     execvp(cmdargv[0], cmdargv);
     if (errno == 2) { // command not found
         printf("%s: command not found...\n", cmdargv[0]);
@@ -19,7 +26,13 @@ void handleChild(char **cmdargv) { // Takes in command arguments and executes.
     exit(errno); // this is only executed if execvp fails (so child does not keep on living)
 }
 
-void handlePossibleForkFail(pid_t p) { // Takes in pid and checks if == -1. If so, fork failed. Prints error message and exits.
+/*
+ * Checks if fork failed. Prints error message and exits if true.
+ * NOTE: Only used in this file.
+ * @param p: pid
+ * @return: void
+*/
+void handlePossibleForkFail(pid_t p) {
     if (p < 0) {
         char err[256];
         sprintf(err, "Error: %s\n", strerror(errno));
@@ -28,7 +41,16 @@ void handlePossibleForkFail(pid_t p) { // Takes in pid and checks if == -1. If s
     }
 }
 
-int split_on_string(char *line, char *split, char **command_ary) { // Takes in line, char separator, and empty array of commands. Splits line on separator into individual commands and loads them command_ary.
+/*
+ * Splits string line on given character separator and loads parts into string array.
+ * NOTE: Only used in this file.
+ * NOTE: Even though split is a string, it should only be one character.
+ * @param line: string to split
+ * @param split: character to split on
+ * @param command_ary: empty string array to load split parts into
+ * @return: int = number of commands
+*/
+int split_on_string(char *line, char *split, char **command_ary) {
     char *front = line;
     char *token;
     int c = 0;
@@ -42,7 +64,13 @@ int split_on_string(char *line, char *split, char **command_ary) { // Takes in l
     return c;
 }
 
-void handle_line_input(char *buffer) { // Executes main bulk of shell program. Takes in buffer, checks for exit, else splits buffer on semicolons and redirections. Executes commands in child processes.
+/*
+ * Executes main bulk of shell program. Takes in buffer, checks for exit, else 
+ * splits buffer on semicolons and redirections. Executes commands in child processes.
+ * @param buffer: input string buffer
+ * @return: void
+*/
+void handle_line_input(char *buffer) {
     // i bet no kid thought of this temp file name (yes i know this can just be dynamic but we are lazy :) )
     char *TEMP_FILE = "/tmp/pipevjZQ3SZpv2UygTLp4RWE.txt"; // string LITERAL can't be modified
 
