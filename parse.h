@@ -1,165 +1,226 @@
 #ifndef PARSE_H
 #define PARSE_H
-// program          : linebreak complete_commands linebreak
-//                  | linebreak
-//                  ;
-// complete_commands: complete_commands newline_list complete_command
-//                  |                                complete_command
-//                  ;
-// complete_command : list separator_op
-//                  | list
-//                  ;
-// list             : list separator_op and_or
-//                  |                   and_or
-//                  ;
-// and_or           :                         pipeline
-//                  | and_or AND_IF linebreak pipeline
-//                  | and_or OR_IF  linebreak pipeline
-//                  ;
-// pipeline         :      pipe_sequence
-//                  | Bang pipe_sequence
-//                  ;
-// pipe_sequence    :                             command
-//                  | pipe_sequence '|' linebreak command
-//                  ;
-// command          : simple_command
-//                  | compound_command
-//                  | compound_command redirect_list
-//                  | function_definition
-//                  ;
-// compound_command : brace_group
-//                  | subshell
-//                  | for_clause
-//                  | case_clause
-//                  | if_clause
-//                  | while_clause
-//                  | until_clause
-//                  ;
-// subshell         : '(' compound_list ')'
-//                  ;
-// compound_list    : linebreak term
-//                  | linebreak term separator
-//                  ;
-// term             : term separator and_or
-//                  |                and_or
-//                  ;
-// for_clause       : For name                                      do_group
-//                  | For name                       sequential_sep do_group
-//                  | For name linebreak in          sequential_sep do_group
-//                  | For name linebreak in wordlist sequential_sep do_group
-//                  ;
-// name             : NAME                     /* Apply rule 5 */
-//                  ;
-// in               : In                       /* Apply rule 6 */
-//                  ;
-// wordlist         : wordlist WORD
-//                  |          WORD
-//                  ;
-// case_clause      : Case WORD linebreak in linebreak case_list    Esac
-//                  | Case WORD linebreak in linebreak case_list_ns Esac
-//                  | Case WORD linebreak in linebreak              Esac
-//                  ;
-// case_list_ns     : case_list case_item_ns
-//                  |           case_item_ns
-//                  ;
-// case_list        : case_list case_item
-//                  |           case_item
-//                  ;
-// case_item_ns     :     pattern ')' linebreak
-//                  |     pattern ')' compound_list
-//                  | '(' pattern ')' linebreak
-//                  | '(' pattern ')' compound_list
-//                  ;
-// case_item        :     pattern ')' linebreak     DSEMI linebreak
-//                  |     pattern ')' compound_list DSEMI linebreak
-//                  | '(' pattern ')' linebreak     DSEMI linebreak
-//                  | '(' pattern ')' compound_list DSEMI linebreak
-//                  ;
-// pattern          :             WORD         /* Apply rule 4 */
-//                  | pattern '|' WORD         /* Do not apply rule 4 */
-//                  ;
-// if_clause        : If compound_list Then compound_list else_part Fi
-//                  | If compound_list Then compound_list           Fi
-//                  ;
-// else_part        : Elif compound_list Then compound_list
-//                  | Elif compound_list Then compound_list else_part
-//                  | Else compound_list
-//                  ;
-// while_clause     : While compound_list do_group
-//                  ;
-// until_clause     : Until compound_list do_group
-//                  ;
-// function_definition : fname '(' ')' linebreak function_body
-//                  ;
-// function_body    : compound_command                /* Apply rule 9 */
-//                  | compound_command redirect_list  /* Apply rule 9 */
-//                  ;
-// fname            : NAME                            /* Apply rule 8 */
-//                  ;
-// brace_group      : Lbrace compound_list Rbrace
-//                  ;
-// do_group         : Do compound_list Done           /* Apply rule 6 */
-//                  ;
-// simple_command   : cmd_prefix cmd_word cmd_suffix
-//                  | cmd_prefix cmd_word
-//                  | cmd_prefix
-//                  | cmd_name cmd_suffix
-//                  | cmd_name
-//                  ;
-// cmd_name         : WORD                   /* Apply rule 7a */
-//                  ;
-// cmd_word         : WORD                   /* Apply rule 7b */
-//                  ;
-// cmd_prefix       :            io_redirect
-//                  | cmd_prefix io_redirect
-//                  |            ASSIGNMENT_WORD
-//                  | cmd_prefix ASSIGNMENT_WORD
-//                  ;
-// cmd_suffix       :            io_redirect
-//                  | cmd_suffix io_redirect
-//                  |            WORD
-//                  | cmd_suffix WORD
-//                  ;
-// redirect_list    :               io_redirect
-//                  | redirect_list io_redirect
-//                  ;
-// io_redirect      :           io_file
-//                  | IO_NUMBER io_file
-//                  |           io_here
-//                  | IO_NUMBER io_here
-//                  ;
-// io_file          : '<'       filename
-//                  | LESSAND   filename
-//                  | '>'       filename
-//                  | GREATAND  filename
-//                  | DGREAT    filename
-//                  | LESSGREAT filename
-//                  | CLOBBER   filename
-//                  ;
-// filename         : WORD                      /* Apply rule 2 */
-//                  ;
-// io_here          : DLESS     here_end
-//                  | DLESSDASH here_end
-//                  ;
-// here_end         : WORD                      /* Apply rule 3 */
-//                  ;
-// newline_list     :              NEWLINE
-//                  | newline_list NEWLINE
-//                  ;
-// linebreak        : newline_list
-//                  | /* empty */
-//                  ;
-// separator_op     : '&'
-//                  | ';'
-//                  ;
-// separator        : separator_op linebreak
-//                  | newline_list
-//                  ;
-// sequential_sep   : ';' linebreak
-//                  | newline_list
-//                  ;
 
+#include "token.h"
+struct program {
+    struct complete_command **complete_commands;
+};
 
-void parse_args(char *line, char **arg_ary);
-void handle_line_input(char * buffer);
+struct complete_command {
+    struct list *list;
+    struct token *separator_op;
+};
+
+struct list {
+    struct list *list;
+    struct token *separator_op;
+    struct and_or *and_or;
+};
+
+struct and_or {
+    struct and_or *and_or;
+    struct token *op;
+    struct pipeline *pipeline;
+};
+
+struct pipeline {
+    struct token *bang;
+    struct pipe_sequence *pipe_sequence;
+};
+
+struct pipe_sequence {
+    struct pipe_sequence *pipe_sequence;
+    struct token *pipe;
+    struct command *command;
+};
+
+struct command {
+    struct simple_command *simple_command;
+    struct compound_command *compound_command;
+    struct redirect_list *redirect_list;
+    struct function_definition *function_definition;
+};
+
+struct compound_command {
+    struct brace_group *brace_group;
+    struct subshell *subshell;
+    struct for_clause *for_clause;
+    struct case_clause *case_clause;
+    struct if_clause *if_clause;
+    struct while_clause *while_clause;
+    struct until_clause *until_clause;
+};
+
+struct subshell {
+    struct compound_list *compound_list;
+};
+
+struct compound_list {
+    struct term *term;
+    struct separator *separator;
+};
+
+struct term {
+    struct term *term;
+    struct separator *separator;
+    struct and_or *and_or;
+};
+
+struct for_clause {
+    struct token *name;
+    struct do_group *do_group;
+    struct sequential_sep *sequential_sep;
+    struct wordlist *wordlist;
+};
+
+struct wordlist {
+    struct wordlist *wordlist;
+    char *word;
+};
+
+struct case_clause {
+    struct token *word;
+    struct case_item *case_list;
+};
+
+struct case_item {
+    struct pattern *pattern;
+    struct compound_list *compound_list;
+};
+
+struct pattern {
+    char **words;
+};
+
+struct if_clause {
+    struct if_part *parts;
+};
+
+struct if_part {
+    struct compound_list *condition;
+    struct compound_list *body;
+};
+
+struct while_clause {
+    struct compound_list *condition;
+    struct compound_list *body;
+};
+
+struct until_clause {
+    struct compound_list *condition;
+    struct compound_list *body;
+};
+
+struct function_definition {
+    struct token *name;
+    struct function_body *body;
+};
+
+struct function_body {
+    struct compound_command *compound_command;
+};
+
+struct brace_group {
+    struct compound_list *compound_list;
+};
+
+struct simple_command {
+    struct cmd_prefix *cmd_prefix;
+    char *cmd;
+    struct cmd_suffix *cmd_suffix;
+};
+
+struct cmd_prefix {
+    struct io_redirect *io_redirect;
+    struct cmd_prefix *cmd_prefix;
+    char *ASSIGNMENT_WORD;
+};
+
+struct cmd_suffix {
+    struct io_redirect *io_redirect;
+    struct cmd_suffix *cmd_suffix;
+    char *WORD;
+};
+
+struct redirect_list {
+    struct io_redirect *io_redirect;
+    struct redirect_list *redirect_list;
+};
+
+struct io_redirect {
+    char *io_file;
+    char *IO_NUMBER;
+    char *io_here;
+};
+
+struct io_file {
+    char *filename;
+    char *LESSAND;
+    char *GREATAND;
+    char *DGREAT;
+    char *LESSGREAT;
+    char *CLOBBER;
+};
+
+struct filename {
+    char *WORD;
+};
+
+struct io_here {
+    char *DLESS;
+    char *DLESSDASH;
+};
+
+struct here_end {
+    char *WORD;
+};
+
+struct separator {
+    struct token *separator_op;
+    struct linebreak *linebreak;
+};
+
+struct sequential_sep {
+    char *SEMICOLON;
+    struct linebreak *linebreak;
+};
+
+struct program *parse_program(struct token_list *tokens);
+struct complete_command *_parse_complete_command(struct token_list *tokens);
+struct list *_parse_list(struct token_list *tokens);
+struct and_or *_parse_and_or(struct token_list *tokens);
+struct pipeline *_parse_pipeline(struct token_list *tokens);
+struct pipe_sequence *_parse_pipe_sequence(struct token_list *tokens);
+struct command *_parse_command(struct token_list *tokens);
+struct compound_command *_parse_compound_command(struct token_list *tokens);
+struct subshell *_parse_subshell(struct token_list *tokens);
+struct compound_list *_parse_compound_list(struct token_list *tokens);
+struct term *_parse_term(struct token_list *tokens);
+struct for_clause *_parse_for_clause(struct token_list *tokens);
+struct case_clause *_parse_case_clause(struct token_list *tokens);
+struct case_item *_parse_case_item(struct token_list *tokens);
+struct pattern *_parse_pattern(struct token_list *tokens);
+struct if_clause *_parse_if_clause(struct token_list *tokens);
+struct if_part *_parse_if_part(struct token_list *tokens);
+struct while_clause *_parse_while_clause(struct token_list *tokens);
+struct until_clause *_parse_until_clause(struct token_list *tokens);
+struct function_definition *
+_parse_function_definition(struct token_list *tokens);
+struct function_body *_parse_function_body(struct token_list *tokens);
+struct brace_group *_parse_brace_group(struct token_list *tokens);
+struct simple_command *_parse_simple_command(struct token_list *tokens);
+struct cmd_prefix *_parse_cmd_prefix(struct token_list *tokens);
+struct cmd_suffix *_parse_cmd_suffix(struct token_list *tokens);
+struct redirect_list *_parse_redirect_list(struct token_list *tokens);
+struct io_redirect *_parse_io_redirect(struct token_list *tokens);
+struct io_file *_parse_io_file(struct token_list *tokens);
+struct filename *_parse_filename(struct token_list *tokens);
+struct io_here *_parse_io_here(struct token_list *tokens);
+struct here_end *_parse_here_end(struct token_list *tokens);
+struct token *_parse_separator_op(struct token_list *tokens);
+struct separator *_parse_separator(struct token_list *tokens);
+struct sequential_sep *_parse_sequential_sep(struct token_list *tokens);
+struct token *_parse_single(struct token_list *tokens, enum token_type type);
+struct wordlist *_parse_wordlist(struct token_list *tokens);
+struct do_group *_parse_do_group(struct token_list *tokens);
 #endif
